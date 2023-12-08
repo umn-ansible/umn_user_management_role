@@ -1,1 +1,39 @@
 ---
+# Dictionary of UMN directory users to permit or revoke
+umn_user_management_directory_users: []
+# Example:
+# umn_user_management_directory_users:
+#   - internet_id: mjb
+#     # Should this user be revoked from access
+#     revoke: yes|no
+#     # Creates a user-specific file in /etc/sudoers.d
+#     sudo: yes|no
+#     authorized_keys:
+#       - 'ssh-key1.....'
+#       - 'ssh-key2.....'
+#       # URL containing public keys works too
+#       - 'https://github.com/username.keys'
+
+# Dictionary of UMN directory groups to permit or revoke
+umn_user_management_directory_groups: []
+# umn_user_management_directory_groups:
+#   - groupname: DEPT_Group_Name
+#     revoke: yes|no
+#     # Creates a group-specific file in /etc/sudoers.d
+#     sudo: yes|no
+
+umn_user_management_service_users: []
+# umn_user_management_service_users:
+#   - username: serviceuser
+#     uid: 12345
+#     comment: 'Info about user'
+#     primary_group: serviceuser
+#     groups:
+#       - list
+#       - of
+#       - groups
+#     shell: /bin/false
+#     create_home: yes|no
+#     home: /path/to/homedir # default to /home/serviceuser
+#     # password, we are not going to permit it! role will set to '!' to lock it
+#     revoke: yes|no #ansible present/absent
