@@ -1,0 +1,7 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: "Include umn_ansible.umn_sample_role"
+      include_role:
+        name: "umn_ansible.umn_sample_role"
