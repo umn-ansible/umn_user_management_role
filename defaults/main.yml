@@ -3,26 +3,51 @@
 umn_user_management_directory_users: []
 # Example:
 # umn_user_management_directory_users:
-#   - internet_id: mjb
+#   - name: mjb
 #     # Should this user be revoked from access
 #     revoke: yes|no
-#     # Creates a user-specific file in /etc/sudoers.d
+#     # Creates a user entry in a file in /etc/sudoers.d
 #     sudo: yes|no
 #     authorized_keys:
 #       - 'ssh-key1.....'
 #       - 'ssh-key2.....'
+#     authorized_keys_revoked:
+#       - 'ssh-key3 to be removed'
 #       # URL containing public keys works too
 #       - 'https://github.com/username.keys'
 
 # Dictionary of UMN directory groups to permit or revoke
 umn_user_management_directory_groups: []
 # umn_user_management_directory_groups:
-#   - groupname: DEPT_Group_Name
+#   - name: DEPT_Group_Name
 #     revoke: yes|no
 #     # Creates a group-specific file in /etc/sudoers.d
 #     sudo: yes|no
 
-umn_user_management_service_users: []
+# Local accounts for deployment users accessible by ssh
+umn_user_management_deploy_users:
+  - name: umndeploy
+    uid: 30000
+    comment: UMN deployment user
+    primary_group: umndeploy
+    groups: []
+    shell: /bin/bash
+    create_home: yes
+    # Should all ssh keys defined for directory users be added for
+    # deploy access via ssh?
+    authorized_keys_from_directory_users: yes
+    # Array of any additional ssh keys needed by this user
+    additional_authorized_keys: []
+    # revoke: yes|no #ansible present/absent
+
+umn_user_management_service_users:
+  - name: umnapps
+    uid: 40000
+    comment: UMN application runner
+    primary_group: umnapps
+    groups: []
+    shell: /bin/false
+    create_home: no
 # umn_user_management_service_users:
 #   - username: serviceuser
 #     uid: 12345
@@ -37,3 +62,10 @@ umn_user_management_service_users: []
 #     home: /path/to/homedir # default to /home/serviceuser
 #     # password, we are not going to permit it! role will set to '!' to lock it
 #     revoke: yes|no #ansible present/absent
+
+umn_user_management_realm_cooldow_seconds: 3
+umn_user_management_sleep_cmd: 'sleep {{ umn_user_management_realm_cooldow_seconds }}'
+umn_user_management_permit_cmd: 'realm permit'
+umn_user_management_revoke_cmd: '{{ umn_user_management_permit_cmd }} --withdraw'
+umn_user_management_permit_group_cmd: '{{ umn_user_management_permit_cmd }} -g'
+umn_user_management_revoke_group_cmd: '{{ umn_user_management_permit_group_cmd }} --withdraw'

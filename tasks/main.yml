@@ -1,1 +1,202 @@
 ---
+- set_fact:
+    umn_user_management_permitted_users: '{{ (umn_user_management_directory_users | selectattr("revoke", "undefined"))+(umn_user_management_directory_users | selectattr("revoke", "defined") | selectattr("revoke", "equalto", False)) }}'
+    umn_user_management_revoked_users: '{{ umn_user_management_directory_users | selectattr("revoke", "defined") | selectattr("revoke", "equalto", True) }}'
+    umn_user_management_permitted_groups: '{{ (umn_user_management_directory_groups | selectattr("revoke", "undefined"))+(umn_user_management_directory_groups | selectattr("revoke", "defined") | selectattr("revoke", "equalto", False)) }}'
+    umn_user_management_revoked_groups: '{{ umn_user_management_directory_groups | selectattr("revoke", "defined") | selectattr("revoke", "equalto", True) }}'
+  tags:
+    - usermanagement
+
+- stat:
+    path: /etc/sssd/sssd.conf
+    get_md5: true
+  register: sssd_initial
+
+# Realm permit users
+- name: usermanagement - Add permitted access for Directory users
+  ansible.builtin.shell: '{{ umn_user_management_permit_cmd }} {{ item.name }}'
+  loop: '{{ umn_user_management_permitted_users }}'
+  loop_control:
+    pause: '{{ umn_user_management_realm_cooldow_seconds }}'
+  changed_when: false
+  tags:
+    - usermanagement
+
+- name: Wait for sssd restarts
+  pause:
+    seconds: '{{ umn_user_management_realm_cooldow_seconds }}'
+  when: umn_user_management_permitted_users | length > 0
+
+# Realm revoke users
+- name: usermanagement - Revoke access for Directory users
+  ansible.builtin.shell: '{{ umn_user_management_revoke_cmd }} {{ item.name }}'
+  loop: '{{ umn_user_management_revoked_users}}'
+  loop_control:
+    pause: '{{ umn_user_management_realm_cooldow_seconds }}'
+  changed_when: false
+  tags:
+    - usermanagement
+
+- name: Wait for sssd restarts
+  pause:
+    seconds: '{{ umn_user_management_realm_cooldow_seconds }}'
+  when: umn_user_management_revoked_users | length > 0
+
+- stat:
+    path: /etc/sssd/sssd.conf
+    get_md5: true
+  register: sssd_post_users
+
+- debug: msg='SSSD realm permitted users changed'
+  changed_when: sssd_initial.stat.md5 != sssd_post_users.stat.md5
+
+# Realm permit groups
+- name: usermanagement - Add permitted access for Directory AD groups
+  ansible.builtin.shell: '{{ umn_user_management_permit_group_cmd }} {{ item.name }}'
+  loop: '{{ umn_user_management_permitted_groups }}'
+  loop_control:
+    pause: '{{ umn_user_management_realm_cooldow_seconds }}'
+  changed_when: false
+  tags:
+    - usermanagement
+
+- name: Wait for sssd restarts
+  pause:
+    seconds: '{{ umn_user_management_realm_cooldow_seconds }}'
+  when: umn_user_management_permitted_groups | length > 0
+
+# Realm revoke groups
+- name: usermanagement - Revoke access for Directory AD groups
+  ansible.builtin.shell: '{{ umn_user_management_revoke_group_cmd }} {{ item.name }}'
+  loop: '{{ umn_user_management_revoked_groups }}'
+  loop_control:
+    pause: '{{ umn_user_management_realm_cooldow_seconds }}'
+  changed_when: false
+  tags:
+    - usermanagement
+
+- stat:
+    path: /etc/sssd/sssd.conf
+    get_md5: true
+  register: sssd_post_groups
+
+- debug: msg='SSSD realm permitted groups changed'
+  changed_when: sssd_post_users.stat.md5 != sssd_post_groups.stat.md5
+
+- name: usermanagement - Create home directories from /etc/skel
+  ansible.builtin.copy:
+    src: /etc/skel
+    dest: /home/{{ item.name }}
+    remote_src: true
+    force: false
+    owner: '{{ item.name }}'
+    group: '{{ item.name }}'
+    mode: '0700'
+  loop: '{{ umn_user_management_permitted_users }}'
+  tags:
+    - usermanagement
+
+- name: usermanagement - Create sudoers files for directory users and groups
+  ansible.builtin.template:
+    src: templates/sudoers-ad-entities
+    dest: /etc/sudoers.d/ansible-sudoers-ad-{{ item.entitytype }}
+    validate: /usr/sbin/visudo -cf %s
+    owner: root
+    group: root
+    mode: '0600'
+  loop:
+    - entitytype: users
+      sudoers_ad_entities: '{{ umn_user_management_permitted_users }}'
+    - entitytype: groups
+      sudoers_ad_entities: '{{ umn_user_management_permitted_groups }}'
+  tags:
+    - usermanagement
+    - sudoers
+
+- name: usermanagement - Install SSH keys for directory users
+  ansible.posix.authorized_key:
+    user: '{{ item.name }}'
+    key: '{{ item.authorized_keys | default([]) | list | flatten | join("\n") }}'
+    state: present
+    exclusive: true
+    manage_dir: true
+  loop: '{{ umn_user_management_permitted_users }}'
+  tags:
+    - usermanagement
+
+- name: usermanagement - Create primary groups for deploy users
+  ansible.builtin.group:
+    name: '{{ item.primary_group }}'
+    state: present
+  loop: '{{ umn_user_management_deploy_users + umn_user_management_service_users }}'
+  tags:
+    - usermanagement
+
+- name: usermanagement - Create deploy users
+  ansible.builtin.user:
+    name: '{{ item.name }}'
+    uid: '{{ item.uid }}'
+    shell: '{{ item.shell | default("/bin/bash") }}'
+    comment: '{{ item.comment | default("UMN deploy user") }}'
+    create_home: true
+    group: '{{ item.primary_group }}'
+    groups: '{{ item.groups }}'
+    # ! locks password auth on Linux
+    password: '!'
+    state: '{{ item.revoke | default(False) | ternary("absent", "present") }}'
+  loop: '{{ umn_user_management_deploy_users }}'
+  tags:
+    - usermanagement
+
+- name: usermanagement - Create service users
+  ansible.builtin.user:
+    name: '{{ item.name }}'
+    uid: '{{ item.uid }}'
+    shell: '{{ item.shell | default("/bin/false") }}'
+    comment: '{{ item.comment | default("UMN Service User") }}'
+    create_home: false
+    group: '{{ item.primary_group }}'
+    groups: '{{ item.groups }}'
+    # ! locks password auth on Linux
+    password: '!'
+    state: '{{ item.revoke | default(False) | ternary("absent", "present") }}'
+  loop: '{{ umn_user_management_service_users }}'
+  tags:
+    - usermanagement
+
+# ALWAYS start with a clean slate for deploy user keys, enabling
+# ansible to use loops over human users' keys without worry
+# about previously revoked keys and the fact that this module
+# require multiple keys to be installed as a single string body
+# rather than as a loop in order for the exclusive attr to work
+- name: usermanagement - Remove all existing deploy user keys
+  file:
+    path: /home/{{ item.name }}/.ssh/authorized_keys
+    state: absent
+  loop: '{{ umn_user_management_deploy_users }}'
+  # always green
+  changed_when: false
+  tags:
+    - usermanagement
+
+- name: usermanagement - Install deploy user ssh keys for directory users
+  ansible.posix.authorized_key:
+    user: '{{ item.0.name }}'
+    key: '{{ item.1.authorized_keys | default([]) | list | flatten | join("\n") }}'
+    comment: '{{ item.1.name }}'
+    state: present
+  when:  item.0.authorized_keys_from_directory_users | default(False)
+  # Nested/2D loop over deploy users and ssh key users
+  loop: '{{ umn_user_management_deploy_users | product(umn_user_management_permitted_users) | list }}'
+  tags:
+    - usermanagement
+
+- name: usermanagement - Install additional deploy user individual ssh keys
+  ansible.posix.authorized_key:
+    user: '{{ item.name }}'
+    key: '{{ item.additional_authorized_keys | default([]) | list | flatten | join("\n") }}'
+    state: present
+  when: item.additional_authorized_keys | default([]) | length > 0
+  loop: '{{ umn_user_management_deploy_users }}'
+  tags:
+    - usermanagement
