@@ -11,8 +11,6 @@ umn_user_management_directory_users: []
 #     authorized_keys:
 #       - 'ssh-key1.....'
 #       - 'ssh-key2.....'
-#     authorized_keys_revoked:
-#       - 'ssh-key3 to be removed'
 #       # URL containing public keys works too
 #       - 'https://github.com/username.keys'
 
