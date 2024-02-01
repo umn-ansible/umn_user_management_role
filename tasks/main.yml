@@ -7,7 +7,8 @@
   tags:
     - usermanagement
 
-- stat:
+# Get an initial hash of sssd.conf to test for state change later...
+- ansible.builtin.stat:
     path: /etc/sssd/sssd.conf
     get_md5: true
   register: sssd_initial
@@ -22,6 +23,8 @@
   tags:
     - usermanagement
 
+# `realm permit` automatically issues restarts and the service will
+# blow up if they cause race conditions, le sigh
 - name: Wait for sssd restarts
   pause:
     seconds: '{{ umn_user_management_realm_cooldow_seconds }}'
@@ -42,11 +45,14 @@
     seconds: '{{ umn_user_management_realm_cooldow_seconds }}'
   when: umn_user_management_revoked_users | length > 0
 
-- stat:
+
+# Get a new hash to compare with the old one
+- ansible.builtin.stat:
     path: /etc/sssd/sssd.conf
     get_md5: true
   register: sssd_post_users
 
+# And mark the changes
 - debug: msg='SSSD realm permitted users changed'
   changed_when: sssd_initial.stat.md5 != sssd_post_users.stat.md5
 
@@ -75,7 +81,7 @@
   tags:
     - usermanagement
 
-- stat:
+- ansible.builtin.stat:
     path: /etc/sssd/sssd.conf
     get_md5: true
   register: sssd_post_groups
