@@ -1,12 +1,8 @@
-Sample Role
+UMN RHEL9 User Management
 =========
 
-This is an empty Ansible role to use as a reference or a source template for developing UMN Ansible Roles. It includes [Molecule](https://ansible.readthedocs.io/projects/molecule/) tests run by GitHub actions.
-
-Requirements
-------------
-
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+Manage permitted AD users and AD groups for RHEL9 AD-joined virtual servers,
+plus optional deployment and service runner users
 
 Role Variables
 --------------
