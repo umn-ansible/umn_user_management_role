@@ -63,8 +63,8 @@ umn_user_management_service_users:
 #     # password, we are not going to permit it! role will set to '!' to lock it
 #     revoke: yes|no #ansible present/absent
 
-umn_user_management_realm_cooldow_seconds: 3
-umn_user_management_sleep_cmd: 'sleep {{ umn_user_management_realm_cooldow_seconds }}'
+umn_user_management_realm_cooldown_seconds: 3
+umn_user_management_sleep_cmd: 'sleep {{ umn_user_management_realm_cooldown_seconds }}'
 umn_user_management_permit_cmd: 'realm permit'
 umn_user_management_revoke_cmd: '{{ umn_user_management_permit_cmd }} --withdraw'
 umn_user_management_permit_group_cmd: '{{ umn_user_management_permit_cmd }} -g'

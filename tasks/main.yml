@@ -18,7 +18,7 @@
   ansible.builtin.shell: '{{ umn_user_management_permit_cmd }} {{ item.name }}'
   loop: '{{ umn_user_management_permitted_users }}'
   loop_control:
-    pause: '{{ umn_user_management_realm_cooldow_seconds }}'
+    pause: '{{ umn_user_management_realm_cooldown_seconds }}'
   changed_when: false
   tags:
     - usermanagement
@@ -27,7 +27,7 @@
 # blow up if they cause race conditions, le sigh
 - name: Wait for sssd restarts
   pause:
-    seconds: '{{ umn_user_management_realm_cooldow_seconds }}'
+    seconds: '{{ umn_user_management_realm_cooldown_seconds }}'
   when: umn_user_management_permitted_users | length > 0
 
 # Realm revoke users
@@ -35,14 +35,14 @@
   ansible.builtin.shell: '{{ umn_user_management_revoke_cmd }} {{ item.name }}'
   loop: '{{ umn_user_management_revoked_users}}'
   loop_control:
-    pause: '{{ umn_user_management_realm_cooldow_seconds }}'
+    pause: '{{ umn_user_management_realm_cooldown_seconds }}'
   changed_when: false
   tags:
     - usermanagement
 
 - name: Wait for sssd restarts
   pause:
-    seconds: '{{ umn_user_management_realm_cooldow_seconds }}'
+    seconds: '{{ umn_user_management_realm_cooldown_seconds }}'
   when: umn_user_management_revoked_users | length > 0
 
 
@@ -61,14 +61,14 @@
   ansible.builtin.shell: '{{ umn_user_management_permit_group_cmd }} {{ item.name }}'
   loop: '{{ umn_user_management_permitted_groups }}'
   loop_control:
-    pause: '{{ umn_user_management_realm_cooldow_seconds }}'
+    pause: '{{ umn_user_management_realm_cooldown_seconds }}'
   changed_when: false
   tags:
     - usermanagement
 
 - name: Wait for sssd restarts
   pause:
-    seconds: '{{ umn_user_management_realm_cooldow_seconds }}'
+    seconds: '{{ umn_user_management_realm_cooldown_seconds }}'
   when: umn_user_management_permitted_groups | length > 0
 
 # Realm revoke groups
@@ -76,7 +76,7 @@
   ansible.builtin.shell: '{{ umn_user_management_revoke_group_cmd }} {{ item.name }}'
   loop: '{{ umn_user_management_revoked_groups }}'
   loop_control:
-    pause: '{{ umn_user_management_realm_cooldow_seconds }}'
+    pause: '{{ umn_user_management_realm_cooldown_seconds }}'
   changed_when: false
   tags:
     - usermanagement
