@@ -10,7 +10,7 @@
 # Get an initial hash of sssd.conf to test for state change later...
 - ansible.builtin.stat:
     path: /etc/sssd/sssd.conf
-    get_md5: true
+    get_checksum: true
   register: sssd_initial
 
 # Realm permit users
@@ -49,12 +49,12 @@
 # Get a new hash to compare with the old one
 - ansible.builtin.stat:
     path: /etc/sssd/sssd.conf
-    get_md5: true
+    get_checksum: true
   register: sssd_post_users
 
 # And mark the changes
 - debug: msg='SSSD realm permitted users modified'
-  changed_when: sssd_initial.stat.md5 != sssd_post_users.stat.md5
+  changed_when: sssd_initial.stat.checksum != sssd_post_users.stat.checksum
 
 # Realm permit groups
 - name: usermanagement - Add permitted access for Directory AD groups
@@ -83,11 +83,11 @@
 
 - ansible.builtin.stat:
     path: /etc/sssd/sssd.conf
-    get_md5: true
+    get_checksum: true
   register: sssd_post_groups
 
 - debug: msg='SSSD realm permitted groups modified'
-  changed_when: sssd_post_users.stat.md5 != sssd_post_groups.stat.md5
+  changed_when: sssd_post_users.stat.checksum != sssd_post_groups.stat.checksum
 
 - name: usermanagement - Create home directories from /etc/skel
   ansible.builtin.copy:
@@ -173,7 +173,7 @@
 # Capture initial state of ssh key files for deploy users
 - stat:
     path: /home/{{ item.name }}/.ssh/authorized_keys
-    get_md5: true
+    get_checksum: true
   loop: '{{ umn_user_management_deploy_users }}'
   register: umn_user_management_deploy_key_stat_initial
   tags:
@@ -222,7 +222,7 @@
 
 - stat:
     path: /home/{{ item.name }}/.ssh/authorized_keys
-    get_md5: true
+    get_checksum: true
   loop: '{{ umn_user_management_deploy_users }}'
   register: umn_user_management_deploy_key_stat_post
   tags:
@@ -230,7 +230,7 @@
 
 - name: usermanagement - Check for changes in deploy user ssh authorized key state
   debug: msg='Deploy user SSH keys {{ item.stat.path }} modified'
-  changed_when: item.stat.md5 != umn_user_management_deploy_key_stat_post.results[stat_idx].stat.md5
+  changed_when: item.stat.checksum != umn_user_management_deploy_key_stat_post.results[stat_idx].stat.checksum
   loop: '{{ umn_user_management_deploy_key_stat_initial.results }}'
   loop_control:
     index_var: stat_idx
