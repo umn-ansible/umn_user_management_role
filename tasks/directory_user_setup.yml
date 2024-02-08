@@ -1,4 +1,11 @@
 ---
+# WHY bother creating homedirs and manually copying /etc/skel?
+# This would happen automatically on first login but this role
+# wants to preinstall ssh keys for users into their homedirs before
+# their first login, as a convenience. Therefore their homedirs
+# must already exist before first login OR we would need to store
+# ssh authorized keys in another location and point sshd at it.
+# So a couple of tasks to precreate HOME, populate skel, and install keys
 - name: usermanagement - Create home directories for directory users
   ansible.builtin.file:
     path: /home/{{ item.name }}
