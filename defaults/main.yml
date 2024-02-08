@@ -36,7 +36,6 @@ umn_user_management_deploy_users:
     authorized_keys_from_directory_users: yes
     # Array of any additional ssh keys needed by this user
     additional_authorized_keys: []
-    # revoke: yes|no #ansible present/absent
 
 umn_user_management_service_users:
   - name: umnapps
@@ -59,7 +58,6 @@ umn_user_management_service_users:
 #     create_home: yes|no
 #     home: /path/to/homedir # default to /home/serviceuser
 #     # password, we are not going to permit it! role will set to '!' to lock it
-#     revoke: yes|no #ansible present/absent
 
 umn_user_management_realm_cooldown_seconds: 3
 umn_user_management_sleep_cmd: 'sleep {{ umn_user_management_realm_cooldown_seconds }}'
