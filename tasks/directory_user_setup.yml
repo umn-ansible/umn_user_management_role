@@ -1,0 +1,41 @@
+---
+- name: usermanagement - Create home directories from /etc/skel
+  ansible.builtin.copy:
+    src: /etc/skel
+    dest: /home/{{ item.name }}
+    remote_src: true
+    force: false
+    owner: '{{ item.name }}'
+    group: '{{ item.name }}'
+    mode: '0700'
+  loop: '{{ umn_user_management_permitted_users }}'
+  tags:
+    - usermanagement
+
+- name: usermanagement - Create sudoers files for directory users and groups
+  ansible.builtin.template:
+    src: templates/sudoers-ad-entities
+    dest: /etc/sudoers.d/ansible-sudoers-ad-{{ item.entitytype }}
+    validate: /usr/sbin/visudo -cf %s
+    owner: root
+    group: root
+    mode: '0600'
+  loop:
+    - entitytype: users
+      sudoers_ad_entities: '{{ umn_user_management_permitted_users }}'
+    - entitytype: groups
+      sudoers_ad_entities: '{{ umn_user_management_permitted_groups }}'
+  tags:
+    - usermanagement
+    - sudoers
+
+- name: usermanagement - Install SSH keys for directory users
+  ansible.posix.authorized_key:
+    user: '{{ item.name }}'
+    key: '{{ item.authorized_keys | default([]) | list | flatten | join("\n") }}'
+    state: present
+    exclusive: true
+    manage_dir: true
+  loop: '{{ umn_user_management_permitted_users }}'
+  tags:
+    - usermanagement

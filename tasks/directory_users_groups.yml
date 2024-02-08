@@ -1,0 +1,103 @@
+---
+- set_fact:
+    umn_user_management_permitted_users: '{{ (umn_user_management_directory_users | selectattr("revoke", "undefined"))+(umn_user_management_directory_users | selectattr("revoke", "defined") | selectattr("revoke", "equalto", False)) }}'
+    umn_user_management_revoked_users: '{{ umn_user_management_directory_users | selectattr("revoke", "defined") | selectattr("revoke", "equalto", True) }}'
+    umn_user_management_permitted_groups: '{{ (umn_user_management_directory_groups | selectattr("revoke", "undefined"))+(umn_user_management_directory_groups | selectattr("revoke", "defined") | selectattr("revoke", "equalto", False)) }}'
+    umn_user_management_revoked_groups: '{{ umn_user_management_directory_groups | selectattr("revoke", "defined") | selectattr("revoke", "equalto", True) }}'
+  tags:
+    - usermanagement
+
+# Get an initial hash of sssd.conf to test for state change later...
+- ansible.builtin.stat:
+    path: /etc/sssd/sssd.conf
+    get_checksum: true
+  register: sssd_initial
+  tags:
+    - usermanagement
+
+# Realm permit users
+- name: usermanagement - Add permitted access for Directory users
+  ansible.builtin.shell: '{{ umn_user_management_permit_cmd }} {{ item.name }}'
+  loop: '{{ umn_user_management_permitted_users }}'
+  loop_control:
+    pause: '{{ umn_user_management_realm_cooldown_seconds }}'
+  changed_when: false
+  tags:
+    - usermanagement
+
+# `realm permit` automatically issues restarts and the service will
+# blow up if they cause race conditions, le sigh
+- name: Wait for sssd restarts
+  pause:
+    seconds: '{{ umn_user_management_realm_cooldown_seconds }}'
+  when: umn_user_management_permitted_users | length > 0
+  tags:
+    - usermanagement
+
+# Realm revoke users
+- name: usermanagement - Revoke access for Directory users
+  ansible.builtin.shell: '{{ umn_user_management_revoke_cmd }} {{ item.name }}'
+  loop: '{{ umn_user_management_revoked_users}}'
+  loop_control:
+    pause: '{{ umn_user_management_realm_cooldown_seconds }}'
+  changed_when: false
+  tags:
+    - usermanagement
+
+- name: Wait for sssd restarts
+  pause:
+    seconds: '{{ umn_user_management_realm_cooldown_seconds }}'
+  when: umn_user_management_revoked_users | length > 0
+  tags:
+    - usermanagement
+
+# Get a new hash to compare with the old one
+- ansible.builtin.stat:
+    path: /etc/sssd/sssd.conf
+    get_checksum: true
+  register: sssd_post_users
+
+# And mark the changes
+- debug: msg='SSSD realm permitted users modified'
+  changed_when: sssd_initial.stat.checksum != sssd_post_users.stat.checksum
+  tags:
+    - usermanagement
+
+# Realm permit groups
+- name: usermanagement - Add permitted access for Directory AD groups
+  ansible.builtin.shell: '{{ umn_user_management_permit_group_cmd }} {{ item.name }}'
+  loop: '{{ umn_user_management_permitted_groups }}'
+  loop_control:
+    pause: '{{ umn_user_management_realm_cooldown_seconds }}'
+  changed_when: false
+  tags:
+    - usermanagement
+
+- name: Wait for sssd restarts
+  pause:
+    seconds: '{{ umn_user_management_realm_cooldown_seconds }}'
+  when: umn_user_management_permitted_groups | length > 0
+  tags:
+    - usermanagement
+
+# Realm revoke groups
+- name: usermanagement - Revoke access for Directory AD groups
+  ansible.builtin.shell: '{{ umn_user_management_revoke_group_cmd }} {{ item.name }}'
+  loop: '{{ umn_user_management_revoked_groups }}'
+  loop_control:
+    pause: '{{ umn_user_management_realm_cooldown_seconds }}'
+  changed_when: false
+  tags:
+    - usermanagement
+
+- ansible.builtin.stat:
+    path: /etc/sssd/sssd.conf
+    get_checksum: true
+  register: sssd_post_groups
+  tags:
+    - usermanagement
+
+- debug: msg='SSSD realm permitted groups modified'
+  changed_when: sssd_post_users.stat.checksum != sssd_post_groups.stat.checksum
+  tags:
+    - usermanagement
