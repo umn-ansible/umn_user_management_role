@@ -13,7 +13,7 @@
     uid: '{{ item.uid }}'
     shell: '{{ item.shell | default("/bin/false") }}'
     comment: '{{ item.comment | default("UMN Service User") }}'
-    create_home: false
+    create_home: '{{ item.create_home | default(false) }}'
     group: '{{ item.primary_group }}'
     groups: '{{ item.groups }}'
     # ! locks password auth on Linux

@@ -1,14 +1,28 @@
 ---
-- name: usermanagement - Create home directories from /etc/skel
-  ansible.builtin.copy:
-    src: /etc/skel
-    dest: /home/{{ item.name }}
-    remote_src: true
-    force: false
+- name: usermanagement - Create home directories for directory users
+  ansible.builtin.file:
+    path: /home/{{ item.name }}
+    state: directory
     owner: '{{ item.name }}'
     group: '{{ item.name }}'
     mode: '0700'
   loop: '{{ umn_user_management_permitted_users }}'
+  tags:
+    - usermanagement
+  register: umn_user_management_homedirs_created
+
+- name: usermanagement - Populate home directories from /etc/skel
+  ansible.builtin.copy:
+    src: /etc/skel/.
+    dest: /home/{{ item.name }}/
+    remote_src: true
+    owner: '{{ item.name }}'
+    group: '{{ item.name }}'
+  loop: '{{ umn_user_management_permitted_users }}'
+  loop_control:
+    index_var: idx
+  # Only copy /etc/skel the first time
+  when: umn_user_management_homedirs_created.results[idx].changed
   tags:
     - usermanagement
 
