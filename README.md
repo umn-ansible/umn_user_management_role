@@ -2,6 +2,7 @@ UMN RHEL9 User Management
 =========
 Ansible role providing Red Hat Enterprise Linux 9 support to:
 
+* Modify sssd systemd service with resilience against multiple restarts
 * Manage permitted AD users and AD groups for RHEL9 AD-joined servers
 * Install and manage SSH authorized keys for users (optional)
 * Install sudoers permissions for authorized users and groups (optional)

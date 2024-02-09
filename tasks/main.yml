@@ -1,4 +1,5 @@
 ---
+- include_tasks: sssd_systemd.yml
 - include_tasks: directory_users_groups.yml
 - include_tasks: directory_user_setup.yml
 - include_tasks: deploy_service_users.yml

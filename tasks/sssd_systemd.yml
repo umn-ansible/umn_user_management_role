@@ -1,0 +1,38 @@
+---
+- name: usermanagement - Create sssd systemd overrides dir
+  ansible.builtin.file:
+    path: /etc/systemd/system/sssd.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  tags:
+    - usermanagement
+    - sssd
+
+- name: usermanagement - Set sssd restart guard limits
+  ansible.builtin.template:
+    src: templates/sssd-override.conf
+    dest: /etc/systemd/system/sssd.service.d/override.conf
+    owner: root
+    group: root
+    mode: '0644'
+  register: sssd_override
+  tags:
+    - usermanagement
+    - sssd
+
+- name: usermanagement - Ensure correct SELinux context on sssd systemd overrides
+  ansible.builtin.shell: restorecon -R /etc/systemd/system/sssd.service.d
+  when: sssd_override.changed
+
+- name: usermanagement - Restart sssd
+  ansible.builtin.systemd:
+    name: sssd
+    state: restarted
+    enabled: true
+    daemon_reload: true
+  when: sssd_override.changed
+  tags:
+    - usermanagement
+    - sssd

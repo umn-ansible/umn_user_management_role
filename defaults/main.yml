@@ -59,8 +59,6 @@ umn_user_management_service_users:
 #     home: /path/to/homedir # default to /home/serviceuser
 #     # password, we are not going to permit it! role will set to '!' to lock it
 
-umn_user_management_realm_cooldown_seconds: 3
-umn_user_management_sleep_cmd: 'sleep {{ umn_user_management_realm_cooldown_seconds }}'
 umn_user_management_permit_cmd: 'realm permit'
 umn_user_management_revoke_cmd: '{{ umn_user_management_permit_cmd }} --withdraw'
 umn_user_management_permit_group_cmd: '{{ umn_user_management_permit_cmd }} -g'
