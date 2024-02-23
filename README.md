@@ -101,9 +101,72 @@ Example Playbook
 
 Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
 
-    - hosts: servers
-      roles:
-         - umn_ansible.umn_user_management
+```yaml
+- hosts: servers
+  roles:
+     - umn_ansible.umn_user_management
+```
+
+```yaml
+# Just allow access for two groups, one gets sudo privileges
+# Do not create any service or deploy users
+umn_user_management_deploy_users: []
+umn_user_management_service_users: []
+
+umn_user_management_directory_groups:
+  - name: DEPT_your_privileged_groupname
+    sudo: yes
+  - name: DEPT_your_unpriv_groupname
+    sudo: no
+```
+
+```yaml
+# Permit 2 specific users and preload their SSH keys
+umn_user_management_directory_users:
+  - name: user0001
+    sudo: yes
+    # Pubkey strings as would appear in .ssh/authorized_keys
+    authorized_keys:
+      - 'ssh-rsa AAAABsdlidfjjgapw938r7odfihfgdfg;iJSDF;lhdfg'
+      - 'ssh-ed25519 AAAAC3NzzsdfliuayweiruawegkjhSDo78Y35OIURYLSEKFHT'
+  - name: user0002
+    sudo: yes
+    # Pull the pubkeys from **public** github
+    # Make sure you get the right username!!!!!
+    authorized_keys:
+      - https://github.com/user0002.keys
+
+
+# No deploy users or service users
+umn_user_management_deploy_users: []
+umn_user_management_service_users: []
+```
+
+```yaml
+# Create 2 service users
+# Allow one of them to actually get a login shell and a home directory
+umn_user_management_service_users:
+  - name: service1
+    uid: 50000
+    group: service1
+  - name: service2
+    uid: 50001
+    shell: /bin/bash
+    create_home: yes
+```
+
+```yaml
+# Revoke access for user9999
+# (who does not otherwise have allowed group membership)
+umn_user_management_directory_users:
+  - name: user9999
+    revoke: yes
+  # The other users are still present...
+  - user:0001
+    sudo: yes
+  - user:0002
+    sudo: yes
+```
 
 License
 -------
