@@ -151,6 +151,7 @@ umn_user_management_service_users:
     group: service1
   - name: service2
     uid: 50001
+    group: service2
     shell: /bin/bash
     create_home: yes
 ```
