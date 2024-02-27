@@ -37,7 +37,7 @@
   ansible.builtin.template:
     src: templates/sudoers-ad-entities
     dest: /etc/sudoers.d/ansible-sudoers-ad-{{ item.entitytype }}
-    validate: /usr/sbin/visudo -cf %s
+    validate: /usr/sbin/visudo --check --file=%s
     owner: root
     group: root
     mode: '0600'

@@ -105,3 +105,25 @@
     index_var: stat_idx
   tags:
     - usermanagement
+
+- name: usermanagement - sudoers rules for deploy users
+  community.general.sudoers:
+    name: ansible-sudoers-deploy-{{ item.name }}
+    state: present
+    user: '{{ item.name }}'
+    commands: '{{ item.sudoers_commands }}'
+    nopassword: true
+  loop: '{{ umn_user_management_deploy_users }}'
+  when: item.sudoers_commands != None and item.sudoers_commands|length > 0
+  tags:
+    - usermanagement
+    - sudoers
+
+# Ensure no orphaned sudoers files are left if the previous command isn't run
+- name: usermanagement - sudoers purge unused files
+  community.general.sudoers:
+    name: ansible-sudoers-deploy-{{ item.name }}
+    state: absent
+  loop: '{{ umn_user_management_deploy_users }}'
+  # Do this for deploy users without sudo defined
+  when: item.sudoers_commands == None or item.sudoers_commands|length == 0
