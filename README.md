@@ -100,7 +100,8 @@ Dependencies
 ------------
 
 * RHEL 9 server that has been joined to UMN Active Directory
-* Ansible POSIX collection (https://docs.ansible.com/ansible/latest/collections/ansible/posix/index.html)
+* Ansible POSIX galaxy collection (https://docs.ansible.com/ansible/latest/collections/ansible/posix/index.html)
+* Community General galaxy collection (https://docs.ansible.com/ansible/latest/collections/community/general/)
 
 Example Playbook
 ----------------
