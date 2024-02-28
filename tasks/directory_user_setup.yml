@@ -33,22 +33,45 @@
   tags:
     - usermanagement
 
-- name: usermanagement - Create sudoers files for directory users and groups
-  ansible.builtin.template:
-    src: templates/sudoers-ad-entities
-    dest: /etc/sudoers.d/ansible-sudoers-ad-{{ item.entitytype }}
-    validate: /usr/sbin/visudo --check --file=%s
-    owner: root
-    group: root
-    mode: '0600'
-  loop:
-    - entitytype: users
-      sudoers_ad_entities: '{{ umn_user_management_permitted_users }}'
-    - entitytype: groups
-      sudoers_ad_entities: '{{ umn_user_management_permitted_groups }}'
+- name: usermanagement - Create sudoers files for directory users
+  community.general.sudoers:
+    name: ansible-sudoers-ad-user-{{ item.name }}
+    user: '{{ item.name }}'
+    validation: required
+    commands: ALL
+    nopassword: true
+  loop: '{{ umn_user_management_permitted_users }}'
+  when: (item.sudo|default(False)) == True and (item.revoke|default(False)) == False
   tags:
     - usermanagement
     - sudoers
+
+- name: usermanagement - Create sudoers files for directory groups
+  community.general.sudoers:
+    name: ansible-sudoers-ad-group-{{ item.name }}
+    group: '{{ item.name }}'
+    validation: required
+    commands: ALL
+    nopassword: true
+  loop: '{{ umn_user_management_permitted_groups }}'
+  when: (item.sudo|default(False)) == True and (item.revoke|default(False)) == False
+  tags:
+    - usermanagement
+    - sudoers
+
+- name: usermanagement - Remove sudoers privileges for revoked or non-sudo users
+  community.general.sudoers:
+    name: ansible-sudoers-ad-user-{{ item.name }}
+    state: absent
+  loop: '{{ umn_user_management_directory_users }}'
+  when: (item.sudo|default(False)) == False or (item.revoke|default(False)) == True
+
+- name: usermanagement - Remove sudoers privileges for revoked or non-sudo groups
+  community.general.sudoers:
+    name: ansible-sudoers-ad-group-{{ item.name }}
+    state: absent
+  loop: '{{ umn_user_management_directory_groups }}'
+  when: (item.sudo|default(False)) == False or (item.revoke|default(False)) == True
 
 - name: usermanagement - Install SSH keys for directory users
   ansible.posix.authorized_key:
