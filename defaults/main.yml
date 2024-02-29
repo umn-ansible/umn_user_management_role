@@ -34,8 +34,10 @@ umn_user_management_deploy_users:
     # Should all ssh keys defined for directory users be added for
     # deploy access via ssh?
     authorized_keys_from_directory_users: yes
-    # Array of any additional ssh keys needed by this user
+    # List of any additional ssh keys needed by this user
     additional_authorized_keys: []
+    # List of sudo rules allowed for this user
+    sudoers_commands: []
 
 umn_user_management_service_users:
   - name: umnapps

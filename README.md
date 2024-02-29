@@ -70,6 +70,12 @@ umn_user_management_deploy_users:
     # List of any additional ssh keys needed by this user
     # One key per list item
     additional_authorized_keys: []
+    # A list of commands this user may run via sudo
+    sudoers_commands: []
+      # examples (must be full path to executable):
+      #- /usr/bin/ls /opt
+      #- /usr/bin/chown * /opt/*
+      #- /usr/sbin/systemctl * nginx
 ```
 
 ### `umn_user_management_service_users`
@@ -94,7 +100,8 @@ Dependencies
 ------------
 
 * RHEL 9 server that has been joined to UMN Active Directory
-* Ansible POSIX collection (https://docs.ansible.com/ansible/latest/collections/ansible/posix/index.html)
+* Ansible POSIX galaxy collection (https://docs.ansible.com/ansible/latest/collections/ansible/posix/index.html)
+* Community General galaxy collection (https://docs.ansible.com/ansible/latest/collections/community/general/)
 
 Example Playbook
 ----------------

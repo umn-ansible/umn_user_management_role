@@ -1,7 +1,0 @@
-# FILE MANAGED BY ANSIBLE - DO NOT MODIFY
-{% for ad_entity in item.sudoers_ad_entities %}
-{%- if ad_entity.sudo|default(False) == True and ad_entity.revoke|default(False) == False %}
-{%- if item.entitytype == 'groups' %}%{% endif %}{{ ad_entity.name }} ALL=(ALL) NOPASSWD: ALL
-{% endif %}
-{% endfor %}
-
