@@ -31,6 +31,20 @@ umn_user_management_directory_users:
       - 'https://github.com/username.keys'
 ```
 
+**IMPORTANT**: Versions of ansible around 2.16 may fail to create an
+authorized_keys file froma  list of individual keys, instead placing literal
+newline `\n` into the file. As a workaround, it is recommended to pass multiple
+keys as a single multiline string in your initial configuration even though the
+role would later concatenate a list.
+
+```
+    # All keys in a single string...
+    authorized_keys:
+      - |
+          ssh-rsa.....
+          ssh-ed25519.....
+```
+
 ### `umn_user_management_directory_groups`
 **Default value:** `[]`
 
