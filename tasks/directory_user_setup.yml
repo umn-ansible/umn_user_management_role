@@ -76,7 +76,9 @@
 - name: usermanagement - Install SSH keys for directory users
   ansible.posix.authorized_key:
     user: '{{ item.name }}'
-    key: '{{ item.authorized_keys | default([]) | list | flatten | join("\n") }}'
+    # Note: outer double, inner single quotes needed for this to work
+    # correctly in authorized_keys
+    key: "{{ item.authorized_keys | default([]) | list | flatten | join('\n') }}"
     state: present
     exclusive: true
     manage_dir: true
