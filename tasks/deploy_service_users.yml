@@ -114,7 +114,7 @@
     commands: '{{ item.sudoers_commands }}'
     nopassword: true
   loop: '{{ umn_user_management_deploy_users }}'
-  when: item.sudoers_commands != None and item.sudoers_commands|length > 0
+  when: item.sudoers_commands is defined and item.sudoers_commands|length > 0
   tags:
     - usermanagement
     - sudoers
@@ -126,4 +126,4 @@
     state: absent
   loop: '{{ umn_user_management_deploy_users }}'
   # Do this for deploy users without sudo defined
-  when: item.sudoers_commands == None or item.sudoers_commands|length == 0
+  when: item.sudoers_commands is undefined or item.sudoers_commands|length == 0
