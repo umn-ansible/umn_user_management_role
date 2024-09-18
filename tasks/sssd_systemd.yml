@@ -25,6 +25,9 @@
 - name: usermanagement - Ensure correct SELinux context on sssd systemd overrides
   ansible.builtin.shell: restorecon -R /etc/systemd/system/sssd.service.d
   when: sssd_override.changed
+  tags:
+    - usermanagement
+    - sssd
 
 - name: usermanagement - Restart sssd
   ansible.builtin.systemd:
