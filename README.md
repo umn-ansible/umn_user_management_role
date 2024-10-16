@@ -24,6 +24,7 @@ umn_user_management_directory_users:
     revoke: yes|no
     # Creates a user entry in a file in /etc/sudoers.d
     sudo: yes|no
+    allow_cron: yes|no
     authorized_keys:
       - 'ssh-rsa.....'
       - 'ssh-ed25519.....'
@@ -77,6 +78,8 @@ umn_user_management_deploy_users:
     groups: []
     shell: /bin/bash
     create_home: yes
+    # Permit the user to have a crontab (denied by default by the system)
+    allow_cron: no
     # Should all ssh keys defined for directory users be added for
     # deploy access via ssh? Any individual user from umn_user_management_directory_users
     # will have their ssh private keys installed for use with this user

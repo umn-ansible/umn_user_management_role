@@ -85,3 +85,14 @@
   loop: '{{ umn_user_management_permitted_users }}'
   tags:
     - usermanagement
+
+# Enable/disable cron users
+- name: usermanagement - permit cron for directory users
+  ansible.builtin.lineinfile:
+    path: /etc/cron.allow
+    line: '{{ item.name }}'
+    state: '{{ "present" if (item.allow_cron|default(False)) else "absent" }}'
+  loop: '{{ umn_user_management_directory_users }}'
+  tags:
+    - usermanagement
+    - cron
