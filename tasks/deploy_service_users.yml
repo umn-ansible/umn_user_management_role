@@ -18,6 +18,7 @@
     groups: '{{ item.groups }}'
     # ! locks password auth on Linux
     password: '!'
+    password_expire_max: "-1"
     state: '{{ item.revoke | default(False) | ternary("absent", "present") }}'
   loop: '{{ umn_user_management_service_users }}'
   tags:
@@ -34,6 +35,7 @@
     groups: '{{ item.groups }}'
     # ! locks password auth on Linux
     password: '!'
+    password_expire_max: "-1"
     state: '{{ item.revoke | default(False) | ternary("absent", "present") }}'
   loop: '{{ umn_user_management_deploy_users }}'
   tags:
